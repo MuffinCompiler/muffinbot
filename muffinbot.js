@@ -7,8 +7,7 @@ var bot = new Discord.Client();
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
 // for pinging servers
-var ping = require("net-ping");
-var session = ping.createSession();
+var ping = require('ping');
 var online = true; // true if server online according to pings, don't change on json api calls!
 
 // util methods
@@ -20,34 +19,36 @@ function Get(url) {
 }
 
 // pings server given by the ipv4 address, returns 0 on successful ping, else -1.
-function ping(serverIP) {
-	session.pingHost(serverIP, function (error, target) {
-		if (!error) {
-			return 0;	
+function pingServer(serverIP) {
+	ping.sys.probe(serverIP, function(isAlive){
+		console.log(isAlive);
+		if (isAlive) {
+			return 0;
 		} else {
-			// maybe distinguish different errors?
 			return -1;
 		}
-	});
+    });
 }
 
 function checkPing() { // TODO ip
-	var res = ping("ip");
+	var res = pingServer("94.23.160.232");
 	if (res == 0) {
 		// online, check if offline at last ping
-		if (!online) {
-			var genChannel = bot.channels.get("name", "general");
-			bot.sendMessage(genChannel, "Server seems to be offline!");
-		}
+		
+		//if (!online) {
+		//	var genChannel = bot.channels.get("name", "general");
+		//	bot.sendMessage(genChannel, "Server seems to be offline!");
+		//}
 		online = true;
 	} else {
 		// offline, check if online at last ping
-		if (online) {
-			var genChannel = bot.channels.get("name", "general");
-			bot.sendMessage(genChannel, "Server seems to be back online!");			
-		}
+		//if (online) {
+		//	var genChannel = bot.channels.get("name", "general");
+		//	bot.sendMessage(genChannel, "Server seems to be back online!");			
+		//}
 		online = false;
-	}	
+	}
+	
 }
 
 function getWotlkServerStats() {
