@@ -1,7 +1,15 @@
+
+// The bot itself
 var Discord = require("discord.js");
 var bot = new Discord.Client();
 
+// for http requests
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+
+// for pinging servers
+var ping = require("net-ping");
+var session = ping.createSession();
+var online = true; // true if server online according to pings, don't change on json api calls!
 
 // util methods
 function Get(url) {
@@ -9,6 +17,37 @@ function Get(url) {
 	Httpreq.open("GET",url,false);
 	Httpreq.send(null);
 	return Httpreq.responseText;          
+}
+
+// pings server given by the ipv4 address, returns 0 on successful ping, else -1.
+function ping(serverIP) {
+	session.pingHost(serverIP, function (error, target) {
+		if (!error) {
+			return 0;	
+		} else {
+			// maybe distinguish different errors?
+			return -1;
+		}
+	});
+}
+
+function checkPing() { // TODO ip
+	var res = ping("ip");
+	if (res == 0) {
+		// online, check if offline at last ping
+		if (!online) {
+			var genChannel = bot.channels.get("name", "general");
+			bot.sendMessage(genChannel, "Server seems to be offline!");
+		}
+		online = true;
+	} else {
+		// offline, check if online at last ping
+		if (online) {
+			var genChannel = bot.channels.get("name", "general");
+			bot.sendMessage(genChannel, "Server seems to be back online!");			
+		}
+		online = false;
+	}	
 }
 
 function getWotlkServerStats() {
@@ -21,7 +60,7 @@ function getWotlkServerStats() {
 	var data = JSON.parse(jsonData);
 	console.log(data);
 
-	if (!data.WotLK.online) {
+	if (!online) { // only check from ping call, is more recent
 		return "WotLK Server is currently offline!";
 	}
 
@@ -29,7 +68,13 @@ function getWotlkServerStats() {
 
 }
 
-bot.on("message", msg => {
+bot.on("ready", () => {
+	// Once the bot is ready, let us know by logging this message into the console
+	console.log("Bot is connected!");
+	setInterval(checkPing, 2000); // ping server every 2 seconds.
+});
+
+bot.on("message", (msg) => {
 
 	var text = msg.content.toLowerCase();
 	console.log(text);
