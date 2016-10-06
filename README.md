@@ -1,9 +1,10 @@
 # muffinbot
-Discord bot
+Discord bot  
 
-Needs node.js:
-npm install discord.js
-npm install xmlhttprequest
+Needs node.js:  
+npm install discord.js  
+npm install xmlhttprequest  
+npm install net-ping  
 
-run with
+run with  
 node muffinbot.js
